@@ -49,6 +49,18 @@ def main():
     if data[:8] != b"\x89PNG\r\n\x1a\n":
         print("source is not a PNG", file=sys.stderr)
         return 1
+    if data[12:16] != b"IHDR":
+        print("source has no IHDR chunk", file=sys.stderr)
+        return 1
+    width = int.from_bytes(data[16:20], "big")
+    height = int.from_bytes(data[20:24], "big")
+    if (width, height) != (1024, 1024):
+        print("source is %dx%d, expected 1024x1024" % (width, height),
+              file=sys.stderr)
+        return 1
+    if data[-12:] != b"\x00\x00\x00\x00IEND\xaeB`\x82":
+        print("source lacks a whole IEND chunk", file=sys.stderr)
+        return 1
     os.makedirs(out_dir, exist_ok=True)
     dst = os.path.join(out_dir, "entry.png")
     shutil.copyfile(src, dst)
